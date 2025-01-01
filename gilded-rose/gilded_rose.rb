@@ -1,17 +1,17 @@
-Item = Struct.new(:name, :sell_in, :quality)
-class Item
+Item = Struct.new(:name, :sell_in, :quality) do
   def conjured?
     name.start_with?('Conjured ')
   end
 end
 
 class GildedRose
-  private
 
   AGED_BRIE = 'Aged Brie'.downcase.freeze
   BACKSTAGE_PASSES = 'Backstage passes to a TAFKAL80ETC concert'.downcase.freeze
   SULFURAS = 'Sulfuras, Hand of Ragnaros'.downcase.freeze
   MAX_QUALITY = 50
+
+  private
 
   def initialize(items)
     @items = items
@@ -53,8 +53,10 @@ class GildedRose
 
   public
 
+  attr_reader :items
+
   def update!
-    @items.each do |item|
+    items.each do |item|
       clean_name = item.name.gsub(/Conjured /, '').downcase
       case clean_name
       when AGED_BRIE then update_brie!(item)
