@@ -1,23 +1,34 @@
+class Die
+  def initialize(sides: 6)
+    @value = rand(1..sides)
+  end
+
+  attr_reader :value
+end
+
 class Roll
   private
 
-  def initialize(sides:, die:, drop: nil)
+  ##
+  # Creates a new dice roll
+  # @param sides How many sides does each die have
+  # @param die how many dies will roll
+  # @param drop Which die should we drop, :lowest, :highest or default: nil
+  def initialize(sides: 6, die:, drop: nil)
       @sides = sides
       @die = die
       @drop = drop
   end
 
-  def roll
-    rand(1..@sides)
-  end
-
   public
 
+  attr_reader :sides, :die, :drop
+
   def total
-    total = @die.times.map { roll }
-    case @drop
-    when :lowest then total = total.max(@die - 1)
-    when :highest then total = total.min(@die - 1)
+    total = die.times.map { Die.new(sides: sides).value }
+    case drop
+    when :lowest then total = total.max(die - 1)
+    when :highest then total = total.min(die - 1)
     end
     total.sum
   end
@@ -25,16 +36,16 @@ end
 
 class DndCharacter
 
-  ATTRIBUTES = %i[strength dexterity constitution intelligence wisdom charisma]
-  BASE_HITPOINTS = 10
-  DICE_SIDES = 6
-  DICE_COUNT = 4
-
   def self.modifier(constitution)
     (constitution.to_i - 10) / 2
   end
 
   private
+
+  ATTRIBUTES = %i[strength dexterity constitution intelligence wisdom charisma]
+  BASE_HITPOINTS = 10
+  DICE_COUNT = 4
+
 
   def initialize
     ATTRIBUTES.each { |attr| instance_variable_set("@#{attr}", score) }
@@ -49,7 +60,7 @@ class DndCharacter
   end
 
   def score
-    Roll.new(sides: DICE_SIDES, die: DICE_COUNT, drop: :lowest).total
+    Roll.new(die: DICE_COUNT, drop: :lowest).total
   end
 
 end
