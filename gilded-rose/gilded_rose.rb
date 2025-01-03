@@ -5,13 +5,12 @@ Item = Struct.new(:name, :sell_in, :quality) do
 end
 
 class GildedRose
-
-  AGED_BRIE = 'Aged Brie'.downcase.freeze
-  BACKSTAGE_PASSES = 'Backstage passes to a TAFKAL80ETC concert'.downcase.freeze
-  SULFURAS = 'Sulfuras, Hand of Ragnaros'.downcase.freeze
-  MAX_QUALITY = 50
-
   private
+
+  AGED_BRIE = 'Aged Brie'.downcase
+  BACKSTAGE_PASSES = 'Backstage passes to a TAFKAL80ETC concert'.downcase
+  SULFURAS = 'Sulfuras, Hand of Ragnaros'.downcase
+  MAX_QUALITY = 50
 
   def initialize(items)
     @items = items
@@ -26,10 +25,10 @@ class GildedRose
     item.quality -= 1 if item.conjured?
 
     case item.sell_in
-    when 11..Float::INFINITY then item.quality += 1
+    when 11... then item.quality += 1
     when 6..10 then item.quality += 2
     when 1..5 then item.quality += 3
-    else item.quality = 0
+    when ...1 then item.quality = 0
     end
 
     item.quality = [item.quality, MAX_QUALITY].min
@@ -47,8 +46,12 @@ class GildedRose
   end
 
   def update_common!(item)
-    item.quality = 0 if item.conjured? && !item.sell_in.positive?
+    item.quality = 0 if item.conjured? && zero_or_less?(item.sell_in)
     item.sell_in -= 1
+  end
+
+  def zero_or_less?(number)
+    number <= 0
   end
 
   public
