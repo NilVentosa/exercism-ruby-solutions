@@ -19,6 +19,7 @@ class Luhn
   end
 
   private_class_method :reasonable?, :run_luhn_algorithm, :remove_spaces
+  private_constant :MINIMUM_CLEAN_ID_LENGTH
 
   def self.valid?(id)
     clean_id = remove_spaces(id)
