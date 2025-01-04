@@ -1,4 +1,7 @@
 class Die
+
+  private
+
   attr_reader :value
   alias to_i value
 
@@ -6,9 +9,16 @@ class Die
     @value = rand(1..sides)
   end
 
+  public :to_i
+
 end
 
 class Roll
+
+  private
+
+  attr_reader :sides, :die, :drop
+
   ##
   # Creates a new dice roll
   # @param sides How many sides does each die have
@@ -20,20 +30,17 @@ class Roll
     @drop = drop
   end
 
-  private
-
-  attr_reader :sides, :die, :drop
-
   public
 
   def total
-    total = die.times.map { Die.new(sides: sides).to_i }
+    rolls = die.times.map { Die.new(sides: sides).to_i }
     case drop
-    when :lowest then total = total.max(die - 1)
-    when :highest then total = total.min(die - 1)
+    when :lowest then rolls = rolls.max(die - 1)
+    when :highest then rolls = rolls.min(die - 1)
     end
-    total.sum
+    rolls.sum
   end
+
 end
 
 class DndCharacter
@@ -42,11 +49,11 @@ class DndCharacter
     (constitution.to_i - 10) / 2
   end
 
-  private
-
   ATTRIBUTES = %i[strength dexterity constitution intelligence wisdom charisma]
   BASE_HITPOINTS = 10
   DICE_COUNT = 4
+
+  private_constant :ATTRIBUTES, :BASE_HITPOINTS, :DICE_COUNT
 
   def initialize
     ATTRIBUTES.each { |attr| instance_variable_set("@#{attr}", score) }
