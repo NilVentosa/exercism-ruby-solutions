@@ -2,8 +2,9 @@ class Clock
 
   MINUTES_IN_DAY = 1440
   MINUTES_IN_HOUR = 60
+  CLOCK_FACE = '%<hour>02i:%<minute>02i'
 
-  private_constant :MINUTES_IN_DAY, :MINUTES_IN_HOUR
+  private_constant :MINUTES_IN_DAY, :MINUTES_IN_HOUR, :CLOCK_FACE
 
   private attr_writer :minutes
 
@@ -11,10 +12,10 @@ class Clock
     self.minutes = (hour * MINUTES_IN_HOUR + minute) % MINUTES_IN_DAY
   end
 
-  attr_reader :minutes
+  protected attr_reader :minutes
 
   def to_s
-    '%02d:%02d' % minutes.divmod(MINUTES_IN_HOUR)
+    CLOCK_FACE % { hour:, minute: }
   end
 
   def ==(other)
@@ -22,11 +23,21 @@ class Clock
   end
 
   def +(other)
-    Clock.new(minute: minutes + other.minutes)
+    self.minutes = (minutes + other.minutes) % MINUTES_IN_DAY
+    self
   end
 
   def -(other)
-    self + Clock.new(minute: -other.minutes)
+    self.minutes = (minutes - other.minutes) % MINUTES_IN_DAY
+    self
+  end
+
+  def hour
+    minutes / MINUTES_IN_HOUR
+  end
+
+  def minute
+    minutes % MINUTES_IN_HOUR
   end
 
 end
