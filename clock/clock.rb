@@ -1,16 +1,20 @@
 class Clock
 
+  MINUTES_IN_DAY = 1440
+  MINUTES_IN_HOUR = 60
+
+  private_constant :MINUTES_IN_DAY, :MINUTES_IN_HOUR
+
   private attr_writer :minutes
 
   def initialize(hour: 0, minute: 0)
-    self.minutes = (hour * 60 + minute) % 1440
+    self.minutes = (hour * MINUTES_IN_HOUR + minute) % MINUTES_IN_DAY
   end
 
   attr_reader :minutes
 
   def to_s
-    h, m = minutes.divmod(60)
-    '%02d:%02d' % [h, m]
+    '%02d:%02d' % minutes.divmod(MINUTES_IN_HOUR)
   end
 
   def ==(other)
