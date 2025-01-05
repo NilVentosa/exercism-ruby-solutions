@@ -1,25 +1,28 @@
 class Clock
 
+  private attr_writer :minutes
+
   def initialize(hour: 0, minute: 0)
-    @hour = (hour + minute / 60) % 24
-    @minute = minute % 60
+    self.minutes = (hour * 60 + minute) % 1440
   end
 
-  attr_reader :hour, :minute
+  attr_reader :minutes
 
   def to_s
-    format('%<hour>02d:%<minute>02d', hour: hour, minute: minute)
+    h, m = minutes.divmod(60)
+    '%02d:%02d' % [h, m]
   end
 
   def ==(other)
-    hour == other.hour && minute == other.minute
+    minutes == other.minutes
   end
 
   def +(other)
-    Clock.new(hour: hour + other.hour, minute: minute + other.minute)
+    Clock.new(minute: minutes + other.minutes)
   end
 
   def -(other)
-    Clock.new(hour: hour - other.hour, minute: minute - other.minute)
+    self + Clock.new(minute: -other.minutes)
   end
+
 end
