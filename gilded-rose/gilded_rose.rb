@@ -1,60 +1,71 @@
-Item = Struct.new(:name, :sell_in, :quality) do
+class Item
+
+  MAX_QUALITY = 50
+
+  def initialize(name:, sell_in:, quality:)
+    @name = name
+    @sell_in = sell_in
+    @quality = quality
+  end
+
+  attr_accessor :name, :sell_in, :quality
+
   def conjured?
     name.start_with?('Conjured ')
   end
+
+  def update_brie
+    self.quality += 1 if sell_in <= 0 && quality < MAX_QUALITY
+    self.quality += 1 if quality < MAX_QUALITY
+    update_common
+  end
+
+  def update_backstage_passes
+    self.quality -= 1 if conjured?
+
+    case sell_in
+    when 11... then self.quality += 1
+    when 6..10 then self.quality += 2
+    when 1..5 then self.quality += 3
+    when ...1 then self.quality = 0
+    end
+
+    self.quality = [quality, MAX_QUALITY].min
+    update_common
+  end
+
+  def update_normal_item
+    if conjured?
+      self.quality -= 2 unless quality.zero?
+      self.quality -= 2 if sell_in <= 0 && quality.positive?
+      self.quality = 0 if quality.negative?
+    else
+      self.quality -= 1 unless quality.zero?
+      self.quality -= 1 if sell_in <= 0 && quality.positive?
+    end
+    update_common
+  end
+
+  def update_sulfuras
+    update_common if conjured?
+  end
+
+  def update_common
+    self.quality = 0 if conjured? && sell_in <= 0
+    self.sell_in -= 1
+  end
+
 end
 
 class GildedRose
-  private
 
   AGED_BRIE = 'Aged Brie'.downcase
   BACKSTAGE_PASSES = 'Backstage passes to a TAFKAL80ETC concert'.downcase
   SULFURAS = 'Sulfuras, Hand of Ragnaros'.downcase
-  MAX_QUALITY = 50
 
   def initialize(items)
     @items = items
   end
-
-  def update_brie!(item)
-    item.quality += 1 if item.sell_in <= 0 && item.quality < MAX_QUALITY
-    item.quality += 1 if item.quality < MAX_QUALITY
-  end
-
-  def update_backstage_passes!(item)
-    item.quality -= 1 if item.conjured?
-
-    case item.sell_in
-    when 11... then item.quality += 1
-    when 6..10 then item.quality += 2
-    when 1..5 then item.quality += 3
-    when ...1 then item.quality = 0
-    end
-
-    item.quality = [item.quality, MAX_QUALITY].min
-  end
-
-  def update_normal_item!(item)
-    if item.conjured?
-      item.quality -= 2 unless item.quality.zero?
-      item.quality -= 2 if item.sell_in <= 0 && item.quality.positive?
-      item.quality = 0 if item.quality.negative?
-    else
-      item.quality -= 1 unless item.quality.zero?
-      item.quality -= 1 if item.sell_in <= 0 && item.quality.positive?
-    end
-  end
-
-  def update_common!(item)
-    item.quality = 0 if item.conjured? && zero_or_less?(item.sell_in)
-    item.sell_in -= 1
-  end
-
-  def zero_or_less?(number)
-    number <= 0
-  end
-
-  public
 
   attr_reader :items
 
@@ -62,12 +73,11 @@ class GildedRose
     items.each do |item|
       clean_name = item.name.gsub(/Conjured /, '').downcase
       case clean_name
-      when AGED_BRIE then update_brie!(item)
-      when SULFURAS then next unless item.conjured?
-      when BACKSTAGE_PASSES then update_backstage_passes!(item)
-      else update_normal_item!(item)
+      when AGED_BRIE then item.update_brie
+      when SULFURAS then item.update_sulfuras
+      when BACKSTAGE_PASSES then item.update_backstage_passes
+      else item.update_normal_item
       end
-      update_common!(item)
     end
   end
 end
