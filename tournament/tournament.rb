@@ -1,36 +1,39 @@
 class Tournament
 
   TEMPLATE = "%-30s | %2s | %2s | %2s | %2s | %2s\n"
+  HEADERS = ["Team", "MP", "W", "D", "L", "P"]
+  DELIMITER = ';'
+  WIN = 'win'
+  LOSS = 'loss'
+  DRAW = 'draw'
 
   def self.generate_result(tally)
-    result_lines = [TEMPLATE % ["Team", "MP", "W", "D", "L", "P"]]
-    tally.values.sort.each { |team| result_lines << generate_result_line(team) }
-    result_lines.join
+    result = [TEMPLATE % HEADERS]
+    tally.values.sort.each { |standing| result << generate_standing_result(standing) }
+    result.join
   end
 
-  def self.generate_result_line(team)
-      TEMPLATE % [ team.name, team.matches_played, team.win, team.draw, team.loss, team.points ]
+  def self.generate_standing_result(standing)
+      TEMPLATE % [ standing.name, standing.matches_played, standing.win, standing.draw, standing.loss, standing.points ]
   end
 
-  private_class_method :generate_result, :generate_result_line
+  private_class_method :generate_result, :generate_standing_result
 
-  def self.tally(results)
-    tally = {}
+  def self.tally(games)
+    tally = Hash.new { |hash, key| hash[key] = Standing.new(key) }
 
-    results.each_line do |line|
+    games.each_line do |line|
       next if line.strip.empty?
-      team_a, team_b, game_result = line.split(";")
-      tally[team_a] = Standing.new(team_a) unless tally.key?(team_a)
-      tally[team_b] = Standing.new(team_b) unless tally.key?(team_b)
+      team_a, team_b, game_result = line.split(DELIMITER)
 
       case game_result.strip
-      when 'win'
+      when WIN
         tally[team_a].win += 1
         tally[team_b].loss += 1
-      when 'loss'
+      when LOSS
         tally[team_b].win += 1
         tally[team_a].loss += 1
-      when 'draw'
+      when DRAW
         tally[team_b].draw += 1
         tally[team_a].draw += 1
       end
@@ -38,9 +41,12 @@ class Tournament
 
     generate_result(tally)
   end
+
 end
 
 class Standing
+
+  POINTS_PER_WIN = 3
 
   def initialize(name)
     @name = name
@@ -56,7 +62,7 @@ class Standing
   end
 
   def points
-    win * 3 + draw
+    win * POINTS_PER_WIN + draw
   end
 
   def <=>(other)
