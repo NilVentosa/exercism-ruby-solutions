@@ -1,11 +1,51 @@
+class GildedRose
+
+  def initialize(items)
+    self.items = items
+  end
+
+  attr_accessor :items
+
+  def update!
+    items.each(&:update)
+  end
+end
+
 class Item
 
   MAX_QUALITY = 50
+  AGED_BRIE = 'Aged Brie'.downcase
+  BACKSTAGE_PASSES = 'Backstage passes to a TAFKAL80ETC concert'.downcase
+  SULFURAS = 'Sulfuras, Hand of Ragnaros'.downcase
 
   def initialize(name:, sell_in:, quality:)
     @name = name
     @sell_in = sell_in
     @quality = quality
+  end
+
+  def update
+    if name.downcase.include? AGED_BRIE
+      thing = Brie.new(name:, sell_in:, quality:)
+      thing.update
+      self.sell_in = thing.sell_in
+      self.quality = thing.quality
+    elsif name.downcase.include? SULFURAS
+      thing = Sulfuras.new(name:, sell_in:, quality:)
+      thing.update
+      self.sell_in = thing.sell_in
+      self.quality = thing.quality
+    elsif name.downcase.include? BACKSTAGE_PASSES
+      thing = BackstagePasses.new(name:, sell_in:, quality:)
+      thing.update
+      self.sell_in = thing.sell_in
+      self.quality = thing.quality
+    else
+      thing = Normal.new(name:, sell_in:, quality:)
+      thing.update
+      self.sell_in = thing.sell_in
+      self.quality = thing.quality
+    end
   end
 
   attr_accessor :name, :sell_in, :quality
@@ -14,13 +54,54 @@ class Item
     name.start_with?('Conjured ')
   end
 
-  def update_brie
-    self.quality += 1 if sell_in <= 0 && quality < MAX_QUALITY
-    self.quality += 1 if quality < MAX_QUALITY
-    update_common
+  def expired?
+    sell_in <= 0
   end
 
-  def update_backstage_passes
+end
+
+class Normal < Item 
+
+  def update
+    if conjured?
+      self.quality -= 2 unless quality.zero?
+      self.quality -= 2 if expired? && quality.positive?
+      self.quality = 0 if quality.negative?
+    else
+      self.quality -= 1 unless quality.zero?
+      self.quality -= 1 if expired? && quality.positive?
+    end
+    self.quality = 0 if conjured? && expired?
+    self.sell_in -= 1
+  end
+
+end
+
+class Brie < Item
+
+  def update
+    self.quality += 1 if expired? && quality < MAX_QUALITY
+    self.quality += 1 if quality < MAX_QUALITY
+    self.quality = 0 if conjured? && expired?
+    self.sell_in -= 1
+  end
+
+end
+
+class Sulfuras < Item
+
+  def update
+    return unless conjured?
+
+    self.quality = 0 if conjured? && expired?
+    self.sell_in -= 1
+  end
+
+end
+
+class BackstagePasses < Item
+
+  def update
     self.quality -= 1 if conjured?
 
     case sell_in
@@ -31,53 +112,8 @@ class Item
     end
 
     self.quality = [quality, MAX_QUALITY].min
-    update_common
-  end
-
-  def update_normal_item
-    if conjured?
-      self.quality -= 2 unless quality.zero?
-      self.quality -= 2 if sell_in <= 0 && quality.positive?
-      self.quality = 0 if quality.negative?
-    else
-      self.quality -= 1 unless quality.zero?
-      self.quality -= 1 if sell_in <= 0 && quality.positive?
-    end
-    update_common
-  end
-
-  def update_sulfuras
-    update_common if conjured?
-  end
-
-  def update_common
-    self.quality = 0 if conjured? && sell_in <= 0
+    self.quality = 0 if conjured? && expired?
     self.sell_in -= 1
   end
 
-end
-
-class GildedRose
-
-  AGED_BRIE = 'Aged Brie'.downcase
-  BACKSTAGE_PASSES = 'Backstage passes to a TAFKAL80ETC concert'.downcase
-  SULFURAS = 'Sulfuras, Hand of Ragnaros'.downcase
-
-  def initialize(items)
-    @items = items
-  end
-
-  attr_reader :items
-
-  def update!
-    items.each do |item|
-      clean_name = item.name.gsub(/Conjured /, '').downcase
-      case clean_name
-      when AGED_BRIE then item.update_brie
-      when SULFURAS then item.update_sulfuras
-      when BACKSTAGE_PASSES then item.update_backstage_passes
-      else item.update_normal_item
-      end
-    end
-  end
 end
