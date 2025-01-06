@@ -59,15 +59,19 @@ class Normal < Item
 
   def update
     if conjured?
-      self.quality -= 2 unless quality.zero?
-      self.quality -= 2 if expired? && quality.positive?
-      self.quality = 0 if quality.negative?
+      update_conjured
     else
       self.quality -= 1 unless quality.zero?
       self.quality -= 1 if expired? && quality.positive?
     end
     self.quality = 0 if conjured? && expired?
     self.sell_in -= 1
+  end
+
+  def update_conjured
+    self.quality -= 2 unless quality.zero?
+    self.quality -= 2 if expired? && quality.positive?
+    self.quality = 0 if quality.negative?
   end
 
 end
@@ -88,7 +92,7 @@ class Sulfuras < Item
   def update
     return unless conjured?
 
-    self.quality = 0 if conjured? && expired?
+    self.quality = 0 if expired?
     self.sell_in -= 1
   end
 
