@@ -25,28 +25,23 @@ class Item
   end
 
   def update
-    if name.downcase.include? AGED_BRIE
-      thing = Brie.new(name:, sell_in:, quality:)
-      thing.update
-      self.sell_in = thing.sell_in
-      self.quality = thing.quality
-    elsif name.downcase.include? SULFURAS
-      thing = Sulfuras.new(name:, sell_in:, quality:)
-      thing.update
-      self.sell_in = thing.sell_in
-      self.quality = thing.quality
-    elsif name.downcase.include? BACKSTAGE_PASSES
-      thing = BackstagePasses.new(name:, sell_in:, quality:)
-      thing.update
-      self.sell_in = thing.sell_in
-      self.quality = thing.quality
-    else
-      thing = Normal.new(name:, sell_in:, quality:)
-      thing.update
-      self.sell_in = thing.sell_in
-      self.quality = thing.quality
+    thing = item_klass.new(name:, sell_in:, quality:)
+    thing.update
+    self.sell_in, self.quality = thing.sell_in, thing.quality
+  end
+
+  private
+
+  def item_klass
+    case name.downcase
+    when /#{AGED_BRIE}/ then Brie
+    when /#{SULFURAS}/ then Sulfuras
+    when /#{BACKSTAGE_PASSES}/ then BackstagePasses
+    else Normal
     end
   end
+
+  public
 
   attr_accessor :name, :sell_in, :quality
 
