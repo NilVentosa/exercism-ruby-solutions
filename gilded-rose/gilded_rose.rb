@@ -77,7 +77,7 @@ class Normal < Item
     if conjured?
       expired? ? set_quality(MIN_QUALITY) : modify_quality_by(-2)
     else
-      expired? ? modify_quality_by(-2) : modify_quality_by(-1)
+      modify_quality_by(expired? ? -2 : -1)
     end
     self.sell_in -= 1
   end
@@ -114,7 +114,7 @@ class BackstagePasses < Item
                 when 1..5 then 3
                 when ...1 then -quality
                 end
-    conjured? ? modify_quality_by(modify_by - 1) : modify_quality_by(modify_by)
+    modify_quality_by(conjured? ? modify_by - 1 : modify_by)
     set_quality(MIN_QUALITY) if conjured? && expired?
     self.sell_in -= 1
   end
