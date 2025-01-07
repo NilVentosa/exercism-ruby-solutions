@@ -51,7 +51,7 @@ class Item
     sell_in <= 0
   end
 
-  def modify_quality(amount)
+  def modify_quality_by(amount)
     set_quality(amount + quality)
   end
 
@@ -75,9 +75,9 @@ class Normal < Item
 
   def update
     if conjured?
-      expired? ? set_quality(MIN_QUALITY) : modify_quality(-2)
+      expired? ? set_quality(MIN_QUALITY) : modify_quality_by(-2)
     else
-      expired? ? modify_quality(-2) : modify_quality(-1)
+      expired? ? modify_quality_by(-2) : modify_quality_by(-1)
     end
     self.sell_in -= 1
   end
@@ -87,7 +87,7 @@ end
 class Brie < Item
 
   def update
-    expired? ? modify_quality(2) : modify_quality(1)
+    expired? ? modify_quality_by(2) : modify_quality_by(1)
     set_quality(MIN_QUALITY) if conjured? && expired?
     self.sell_in -= 1
   end
@@ -114,7 +114,7 @@ class BackstagePasses < Item
                 when 1..5 then 3
                 when ...1 then -quality
                 end
-    conjured? ? modify_quality(modify_by - 1) : modify_quality(modify_by)
+    conjured? ? modify_quality_by(modify_by - 1) : modify_quality_by(modify_by)
     set_quality(MIN_QUALITY) if conjured? && expired?
     self.sell_in -= 1
   end
