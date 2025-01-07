@@ -19,6 +19,7 @@ class Item
 
   MAX_QUALITY = 50
   MIN_QUALITY = 0
+  CONJURED_PREFIX = /Conjured /
 
   def self.klass_mapping
     {
@@ -37,13 +38,13 @@ class Item
   private
 
   def unconjure(name)
-    name.gsub(/Conjured /, '')
+    name.gsub(CONJURED_PREFIX, '')
   end
 
   protected
 
   def conjured?
-    name.start_with?('Conjured ')
+    name.start_with?(CONJURED_PREFIX)
   end
 
   def expired?
