@@ -1,5 +1,6 @@
 class Gigasecond
+  GIGASECOND = 1e9
   def self.from(input_time)
-    Time.at(1000000000) + input_time.to_r
+    input_time + GIGASECOND
   end
 end
