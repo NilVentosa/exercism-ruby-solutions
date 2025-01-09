@@ -27,7 +27,7 @@ class Tournament
       when LOSS
         tally[team_b].win += 1
         tally[team_a].loss += 1
-      when 'draw'
+      when DRAW
         tally[team_b].draw += 1
         tally[team_a].draw += 1
       end
