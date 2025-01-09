@@ -1,26 +1,20 @@
 class Tournament
 
-  TEMPLATE = "%-30s | %2s | %2s | %2s | %2s | %2s\n"
-  HEADERS = ["Team", "MP", "W", "D", "L", "P"]
+  TEMPLATE  = "%-30s | %2s | %2s | %2s | %2s | %2s\n"
+  HEADERS   = %w[Team MP W D L P]
   DELIMITER = ';'
-  WIN = 'win'
-  LOSS = 'loss'
-  DRAW = 'draw'
+  WIN       = 'win'
+  LOSS      = 'loss'
+  DRAW      = 'draw'
 
-  def self.generate_result(tally)
+  def self.to_s(tally)
     result = [TEMPLATE % HEADERS]
-    tally.values.sort.each { |standing| result << generate_standing_result(standing) }
+    tally.values.sort.each { |standing| result << standing.to_s }
     result.join
   end
 
-  def self.generate_standing_result(standing)
-      TEMPLATE % [ standing.name, standing.matches_played, standing.win, standing.draw, standing.loss, standing.points ]
-  end
-
-  private_class_method :generate_result, :generate_standing_result
-
   def self.tally(games)
-    tally = Hash.new { |hash, key| hash[key] = Standing.new(key) }
+    tally = Hash.new { |tally, name| tally[name] = Standing.new(name) }
 
     games.each_line do |line|
       next if line.strip.empty?
@@ -33,13 +27,17 @@ class Tournament
       when LOSS
         tally[team_b].win += 1
         tally[team_a].loss += 1
-      when DRAW
+      when 'draw'
         tally[team_b].draw += 1
         tally[team_a].draw += 1
       end
     end
 
-    generate_result(tally)
+    def self.template
+      TEMPLATE
+    end
+
+    to_s(tally)
   end
 
 end
@@ -50,12 +48,19 @@ class Standing
 
   def initialize(name)
     @name = name
-    @win = 0
+    @win  = 0
     @loss = 0
     @draw = 0
   end
 
   attr_accessor :win, :loss, :draw, :name
+
+  protected
+
+  def <=>(other)
+    return other.points <=> points unless points == other.points
+    name <=> other.name
+  end
 
   def matches_played
     win + loss + draw
@@ -65,9 +70,10 @@ class Standing
     win * POINTS_PER_WIN + draw
   end
 
-  def <=>(other)
-    return other.points <=> points unless points == other.points
-    name <=> other.name
+  public
+
+  def to_s
+      Tournament.template % [name, matches_played, win, draw, loss, points]
   end
 
 end
