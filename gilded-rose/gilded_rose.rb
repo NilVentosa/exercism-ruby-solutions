@@ -1,6 +1,33 @@
+class GildedRose
+
+  private
+
+  def initialize(items)
+    self.items = items
+  end
+
+  attr_accessor :items
+
+  public
+
+  def update!
+    items.each(&:update)
+  end
+end
+
 class Item
 
   MAX_QUALITY = 50
+  MIN_QUALITY = 0
+  CONJURED_PREFIX = /Conjured /
+
+  def self.klass_mapping
+    {
+      'aged brie' => Brie,
+      'backstage passes to a tafkal80etc concert' => BackstagePasses,
+      'sulfuras, hand of ragnaros' => Sulfuras
+    }.tap { |mapping| mapping.default = Normal }
+  end
 
   def initialize(name:, sell_in:, quality:)
     @name = name
@@ -8,76 +35,88 @@ class Item
     @quality = quality
   end
 
-  attr_accessor :name, :sell_in, :quality
+  private
+
+  def unconjure(name)
+    name.gsub(CONJURED_PREFIX, '')
+  end
+
+  protected
 
   def conjured?
-    name.start_with?('Conjured ')
+    name.start_with?(CONJURED_PREFIX)
   end
 
-  def update_brie
-    self.quality += 1 if sell_in <= 0 && quality < MAX_QUALITY
-    self.quality += 1 if quality < MAX_QUALITY
-    update_common
+  def expired?
+    sell_in <= 0
   end
 
-  def update_backstage_passes
-    self.quality -= 1 if conjured?
-
-    case sell_in
-    when 11... then self.quality += 1
-    when 6..10 then self.quality += 2
-    when 1..5 then self.quality += 3
-    when ...1 then self.quality = 0
-    end
-
-    self.quality = [quality, MAX_QUALITY].min
-    update_common
+  def modify_quality_by(amount)
+    set_quality(amount + quality)
   end
 
-  def update_normal_item
+  def set_quality(amount)
+    self.quality = (amount).clamp(MIN_QUALITY, MAX_QUALITY) 
+  end
+
+  public
+
+  attr_accessor :name, :sell_in, :quality
+
+  def update
+    klass = self.class.klass_mapping[unconjure(name).downcase]
+    item = klass.new(name:, sell_in:, quality:).tap(&:update)
+    self.sell_in, self.quality = item.sell_in, item.quality
+  end
+
+end
+
+class Normal < Item 
+
+  def update
     if conjured?
-      self.quality -= 2 unless quality.zero?
-      self.quality -= 2 if sell_in <= 0 && quality.positive?
-      self.quality = 0 if quality.negative?
+      expired? ? set_quality(MIN_QUALITY) : modify_quality_by(-2)
     else
-      self.quality -= 1 unless quality.zero?
-      self.quality -= 1 if sell_in <= 0 && quality.positive?
+      modify_quality_by(expired? ? -2 : -1)
     end
-    update_common
-  end
-
-  def update_sulfuras
-    update_common if conjured?
-  end
-
-  def update_common
-    self.quality = 0 if conjured? && sell_in <= 0
     self.sell_in -= 1
   end
 
 end
 
-class GildedRose
+class Brie < Item
 
-  AGED_BRIE = 'Aged Brie'.downcase
-  BACKSTAGE_PASSES = 'Backstage passes to a TAFKAL80ETC concert'.downcase
-  SULFURAS = 'Sulfuras, Hand of Ragnaros'.downcase
-
-  def initialize(items)
-    @items = items
+  def update
+    expired? ? modify_quality_by(2) : modify_quality_by(1)
+    set_quality(MIN_QUALITY) if conjured? && expired?
+    self.sell_in -= 1
   end
 
-  attr_reader :items
+end
 
-  def update!
-    items.each do |item|
-      clean_name = item.name.gsub(/Conjured /, '').downcase
-      case clean_name
-      when AGED_BRIE then item.update_brie
-      when SULFURAS then item.update_sulfuras
-      when BACKSTAGE_PASSES then item.update_backstage_passes
-      else item.update_normal_item
-      end
-    end
+class Sulfuras < Item
+
+  def update
+    return unless conjured?
+
+    set_quality(MIN_QUALITY) if expired?
+    self.sell_in -= 1
   end
+
+end
+
+class BackstagePasses < Item
+
+  def update
+    modify_by = case sell_in
+                when 11... then 1
+                when 6..10 then 2
+                when 1..5 then 3
+                when ...1 then -quality
+                end
+    modify_quality_by(conjured? ? modify_by - 1 : modify_by)
+    set_quality(MIN_QUALITY) if conjured? && expired?
+    self.sell_in -= 1
+  end
+
 end
