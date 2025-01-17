@@ -1,15 +1,15 @@
-class Tournament
+module Tournament
 
-  TEMPLATE  = "%-30s | %2s | %2s | %2s | %2s | %2s\n"
-  HEADERS   = %w[Team MP W D L P]
+  LINE  = "%-30s | %2s | %2s | %2s | %2s | %2s\n"
+  HEADER   = %w[Team MP W D L P]
   DELIMITER = ';'
   WIN       = 'win'
   LOSS      = 'loss'
   DRAW      = 'draw'
 
-  def self.to_s(tally)
-    result = [TEMPLATE % HEADERS]
-    tally.values.sort.each { |standing| result << standing.to_s }
+  def self.to_s(games)
+    result = [LINE % HEADER]
+    games.values.sort.each { |standing| result << standing.to_s }
     result.join
   end
 
@@ -33,13 +33,16 @@ class Tournament
       end
     end
 
-    def self.template
-      TEMPLATE
+    def self.line
+      LINE
     end
 
     to_s(tally)
   end
 
+end
+
+class Game
 end
 
 class Standing
@@ -52,8 +55,6 @@ class Standing
     @loss = 0
     @draw = 0
   end
-
-  attr_accessor :win, :loss, :draw, :name
 
   protected
 
@@ -72,8 +73,10 @@ class Standing
 
   public
 
+  attr_accessor :win, :loss, :draw, :name
+
   def to_s
-      Tournament.template % [name, matches_played, win, draw, loss, points]
+    Tournament.line % [name, matches_played, win, draw, loss, points]
   end
 
 end
