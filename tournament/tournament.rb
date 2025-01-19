@@ -14,6 +14,10 @@ module Tournament
   end
 
   def self.tally(games)
+    to_s(thing(games))
+  end
+
+  def self.thing(games)
     tally = Hash.new { |tally, name| tally[name] = Standing.new(name) }
 
     games.each_line do |line|
@@ -32,17 +36,13 @@ module Tournament
         tally[team_a].draw += 1
       end
     end
-
-    def self.line
-      LINE
-    end
-
-    to_s(tally)
+    tally
   end
 
-end
+  def self.line
+    LINE
+  end
 
-class Game
 end
 
 class Standing
