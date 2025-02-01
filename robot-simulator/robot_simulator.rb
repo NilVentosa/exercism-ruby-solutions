@@ -10,7 +10,7 @@ class Robot
   end
 
   def turn(side)
-    index_modifier = {left: -1, right: 1}[side] || raise(ArgumentError)
+    index_modifier = {left: -1, right: 1}[side] || raise(DirectionError "Invalid direction #{side}")
 
     new_index = (DIRECTION.find_index(bearing) + index_modifier) % 4
     orient(DIRECTION[new_index])
@@ -39,7 +39,12 @@ class Robot
   end
 
   def advance
-    movement = {north: [0, 1], east:  [1, 0], south: [0, -1], west:  [-1, 0]}
+    movement = {
+      north: [0, 1],
+      east:  [1, 0],
+      south: [0, -1],
+      west:  [-1, 0]
+    }
 
     dx, dy = movement[self.bearing]
     self.coordinates[0] += dx
@@ -50,20 +55,20 @@ end
 
 class Simulator
     
-    LETTER_INSTRUCTION_MAP = {L: :turn_left, R: :turn_right, A: :advance}
+    LETTER_TO_INSTRUCTION = {L: :turn_left, R: :turn_right, A: :advance}
 
   private
 
   def parse_instruction(letter)
-    LETTER_INSTRUCTION_MAP[letter.to_sym]
+    LETTER_TO_INSTRUCTION[letter.to_sym]
   end
 
-  private_constant :LETTER_INSTRUCTION_MAP
+  private_constant :LETTER_TO_INSTRUCTION
 
   public
 
-  def instructions(instructions)
-    instructions.chars.map { |instruction| parse_instruction(instruction) }
+  def instructions(raw_instructions)
+    raw_instructions.chars.map { |raw_instruction| parse_instruction(raw_instruction) }
   end
 
   def place(robot, x:, y:, direction:)
@@ -71,8 +76,11 @@ class Simulator
     robot.orient(direction)
   end
 
-  def evaluate(robot, instructions)
-    instructions(instructions).each { |instruction| robot.send(instruction) }
+  def evaluate(robot, raw_instructions)
+    instructions(raw_instructions).each { |instruction| robot.public_send(instruction) }
   end
 
+end
+
+class DirectionError < ArgumentError
 end
