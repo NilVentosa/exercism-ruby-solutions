@@ -46,7 +46,7 @@ class Robot
       west:  [-1, 0]
     }
 
-    dx, dy = movement[self.bearing]
+    dx, dy = movement[bearing]
     self.coordinates[0] += dx
     self.coordinates[1] += dy
   end
@@ -54,7 +54,7 @@ class Robot
 end
 
 class Simulator
-    
+
     LETTER_TO_INSTRUCTION = {L: :turn_left, R: :turn_right, A: :advance}
 
   private
